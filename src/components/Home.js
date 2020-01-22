@@ -93,8 +93,8 @@ class Home extends Component {
     }
 
     showTask = () => {
-        let urut = [...this.state.list]
-            urut = urut.sort((a, b) => a.createdAt - b.createdAt)
+        let urut = this.props.LIST
+            // urut = urut.sort((a, b) => a.createdAt - b.createdAt)
         let rendTask = urut.map(val => {
             if (val.status === 0) {
                 return (

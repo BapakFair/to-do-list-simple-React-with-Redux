@@ -1,4 +1,4 @@
-const globalState = [{
+let globalState = [{
     "id": 1,
     "title": "Make a meal",
     "description": "lorem ipsum",
