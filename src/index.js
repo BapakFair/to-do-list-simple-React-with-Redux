@@ -6,10 +6,10 @@ import * as serviceWorker from './serviceWorker';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { createStore } from 'redux';
 import { Provider } from 'react-redux';
-import rootReducer from './reducers'
+import Reducer from './reducers'
 
 const storeRedux = createStore(
-    rootReducer, 
+    Reducer, 
     window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 
 ReactDOM.render(

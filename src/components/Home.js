@@ -2,8 +2,7 @@ import React, { Component } from 'react';
 import { Card, Button, Table, Modal } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import "./Home.css";
-import { useSelector, useDispatch } from 'react-redux'
-import { addTask } from './../actions/index'
+import { addTask, delTask, doneTask, cancelTask, updateTask } from './../actions/index'
 import Swal from 'sweetalert2'
 
 class Home extends Component {
@@ -11,46 +10,13 @@ class Home extends Component {
             title:"",
             status:0,
             description:"",
-            newTask:[],
             show:false,
-            isi:[],
-            list: []
+            isi:""
     };
 
     updateInput(key, value) {
         this.setState({ [key]: value });
     };
-
-    addItem() {
-        var d = new Date();
-        var waktu = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' ' + d.getHours() + ':' + d.getMinutes();
-        const newTask = {
-            id: 1 + Math.random(),
-            title: this.state.title,
-            status: this.state.status,
-            description: this.state.description,
-            createdAt: waktu
-        };
-        const list = this.props.LIST;
-        list.push(newTask);
-        this.setState({
-            list,
-            newTask,
-            title:"",
-            description:""
-        });
-        this.props.addTask(
-            list
-        )
-        Swal.fire({
-            position: 'center',
-            icon: 'success',
-            title: 'Task berhasil ditambahkan',
-            showConfirmButton: false,
-            timer: 1500
-        })
-    };
-
 
     updateItem() {
         var d = new Date();
@@ -80,16 +46,24 @@ class Home extends Component {
                 createdAt: waktu
             };
         }
-        const list = this.props.LIST;
+        if (!this.state.description && !this.state.title) {
+            newTask = {
+                id: this.state.isi.id,
+                title: this.state.isi.title,
+                status: this.state.status,
+                description: this.state.isi.description,
+                createdAt: waktu
+            };
+        }
+        const list = this.props.tasks.tasks;
         const data = list.filter(item => item.id !== this.state.isi.id);
         data.push(newTask);
         this.setState({
-            // list:data,
             title: "",
             description: "",
             show:false
         });
-        this.props.addTask(data);
+        this.props.updateHandler(newTask);
         Swal.fire({
             position: 'center',
             icon: 'success',
@@ -98,7 +72,6 @@ class Home extends Component {
             timer: 1500
         });
     };
-
 
     titleHandler(e){
             this.setState({ title: e.target.value }) 
@@ -109,8 +82,7 @@ class Home extends Component {
     }
 
     showTask = () => {
-        let urut = this.props.LIST
-            // urut = urut.sort((a, b) => a.createdAt - b.createdAt)
+        let urut = this.props.tasks.tasks
         let rendTask = urut.map(val => {
             if (val.status === 0) {
                 return (
@@ -118,8 +90,8 @@ class Home extends Component {
                         <td>{val.title}</td>
                         <td>
                             <div className="row">
-                            <Button variant="success" onClick={() => { this.doneTask(val.id) }} className="mr-1">Done</Button>
-                            <Button className="btn btn-floating mr-1" variant="danger" onClick={() => this.deleteItem(val.id)}>
+                            <Button variant="success" onClick={() => { this.props.doneHandler(val) }} className="mr-1">Done</Button>
+                            <Button className="btn btn-floating mr-1" variant="danger" onClick={() => this.props.removeTask(val.id)}>
                                 <i className="material-icons">Del </i>
                             </Button>
                             <Button className="btn btn-floating" onClick={() => this.detailTask(val.id)}>
@@ -128,8 +100,7 @@ class Home extends Component {
                                     onHide={()=> this.setState({show:false})}
                                     onClick={(e) => {
                                     e.stopPropagation();
-                        }}
-                                                            >
+                                    }}>
                                     <Modal.Header closeButton> Detail </Modal.Header>
                                     <Modal.Body>
                                         <div>
@@ -171,7 +142,7 @@ class Home extends Component {
     detailTask(id) {
         this.setState({ show: !this.state.show});
 
-        const list = this.props.LIST;
+        const list = this.props.tasks.tasks;
         const dataIsi = list.filter(item => item.id === id);
         const Isi = {
                 id: dataIsi[0].id,
@@ -184,18 +155,17 @@ class Home extends Component {
             isi: Isi
         });
 
-        console.log(dataIsi)
+        // console.log(this.state.isi)
     };
     
-
     showTaskDone = () => {
-        let rendTask = this.props.LIST.map(val => {
+        let rendTask = this.props.tasks.tasks.map(val => {
             if (val.status === 1) {
                 return (
                     <tr>
                         <td><strike><i>{val.title}</i></strike></td>
                         <td>
-                            <Button variant="danger" onClick={() => { this.cancelTask(val.id) }} className="mr-3">Cancel</Button>
+                            <Button variant="danger" onClick={() => { this.props.cancelHandler(val) }} className="mr-3">Cancel</Button>
                         </td>
                     </tr>
                 ) 
@@ -204,93 +174,17 @@ class Home extends Component {
         return rendTask
     };
 
-    deleteItem(id) {
-        Swal.fire({
-            title: 'Serius mau dihapus?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            // this.setState({ list: updatedList });
-            if (result.value) {
-                const updatedList = this.props.LIST.filter(item => item.id !== id);
-                this.props.addTask(updatedList)
-                Swal.fire(
-                    'Deleted!',
-                    'Your file has been deleted.',
-                    'success'
-                )
-            }
-            else{
-                Swal.close()
-            }
-        })
-        // const list = this.props.LIST;
-        // const updatedList = list.filter(item => item.id !== id);
-        // this.setState({ list: updatedList });
-        // this.props.addTask(updatedList)
-        
-    };
-
-    cancelTask(id) {
-        const list = this.props.LIST;
-        const updatedList = list.filter(item => item.id !== id);
-        let dataUpdate = list.filter(item => item.id === id);
-        let dataPush = {
-            id: dataUpdate[0].id,
-            title: dataUpdate[0].title,
-            status: 0,
-            description: dataUpdate[0].description,
-            createdAt: dataUpdate[0].createdAt
-        };
-        let List = [...updatedList, dataPush]
-        // this.setState({ list: List });
-        this.props.addTask(List)
-         Swal.fire({
-             position: 'center',
-             icon: 'info',
-             title: 'Pindah kolom sebelah ya!',
-             showConfirmButton: false,
-             timer: 1500
-         })
-    };
-
-    doneTask(id) {
-        const list = this.props.LIST;
-        const updatedList = list.filter(item => item.id !== id);
-        let dataUpdate = list.filter(item => item.id === id);
-        let dataPush = {
-            id: dataUpdate[0].id,
-            title: dataUpdate[0].title,
-            status: 1,
-            description: dataUpdate[0].description,
-            createdAt: dataUpdate[0].createdAt
-        };
-        let List = [...updatedList, dataPush]
-        // this.setState({ list: List });
-        this.props.addTask(List)
-         Swal.fire({
-             position: 'center',
-             icon: 'success',
-             title: 'Your work has been Done!',
-             showConfirmButton: false,
-             timer: 1500
-         })
-    };
-
     componentDidMount(){
         this.setState({list:this.props.LIST})
     };
     
     render() {
-        console.log(this.state.id)
+        // console.log(this.state.id)
+        const { title, description } = this.state;
+        const { addNewTask } = this.props;
         return (
             <div className= "containerr " >
                 <div className= "todo" >
-                    {/* <Card> */}
                         <Card>
                             <h2 className="mt-2 mb-2">To do</h2>                            
                             <input
@@ -310,17 +204,25 @@ class Home extends Component {
                             />
                             <Button
                                 className="add-btn btn-floating addTask"
-                                onClick={() => this.addItem()}
+                                onClick={ () => {
+                                    this.setState({
+                                        title:"",
+                                        description:""
+                                    });
+                                    addNewTask({
+                                        title,
+                                        description
+                                    })
+                                }
+                                }
                             >
                                 <i className="material-icons"> Add Task </i>
                             </Button>
                             
                         </Card>
-                    {/* </Card> */}
                 </div>
                     
                     <div className="show">
-                        {/* <Card> */}
                             <Table striped bordered hover>
                                 <thead className="text-center">
                                     <tr>
@@ -332,11 +234,9 @@ class Home extends Component {
                                     {this.showTask()}
                                 </tbody>
                             </Table>
-                        {/* </Card> */}
                     </div>
 
                     <div className="show">
-                        {/* <Card> */}
                             <Table striped bordered hover>
                                 <thead className="text-center">
                                     <tr>
@@ -348,16 +248,32 @@ class Home extends Component {
                                     {this.showTaskDone()}
                                 </tbody>
                             </Table>
-                        {/* </Card> */}
                     </div>
             </div>
         );
     };
 };
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (tasks) => {
     return {
-        LIST: state
+        tasks
     }
 }
-export default connect(mapStateToProps, { addTask })(Home);
+const mapDispatchToProps = dispatch => ({
+    addNewTask: task => {
+        dispatch(addTask(task));
+    },
+    removeTask: taskID => {
+        dispatch(delTask(taskID))
+    },
+    doneHandler: taskID => {
+        dispatch(doneTask(taskID))
+    },
+    cancelHandler: taskID => {
+        dispatch(cancelTask(taskID))
+    },
+    updateHandler: data => {
+        dispatch(updateTask(data))
+    }
+})
+export default connect(mapStateToProps, mapDispatchToProps)(Home);

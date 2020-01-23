@@ -1,3 +1,5 @@
+import { combineReducers } from "redux"
+
 let globalState = [{
     "id": 1,
     "title": "Make a meal",
@@ -32,11 +34,62 @@ let globalState = [{
 
 const rootReducer = (state = globalState, action) => {
     switch (action.type) {
-        case 'ADDTASK':
-            return action.payload;
+        case "ADDTASK":
+            return [
+                ...state,
+                {
+                    id: action.id,
+                    title: action.title,
+                    status: action.status,
+                    description: action.description,
+                    createdAt: action.createdAt
+                }
+            ];
+        case "DELTASK":
+            return state.filter(task => task.id != action.id);
+        case "DONETASK":
+            return state = state.filter(task => task.id != action.id),
+            [
+                ...state,
+                {
+                    id: action.id,
+                    title: action.title,
+                    status: 1,
+                    description: action.description,
+                    createdAt: action.createdAt
+                }
+            ]
+        case "CANCELTASK":
+            return state = state.filter(task => task.id != action.id),
+            [
+                ...state,
+                {
+                    id: action.id,
+                    title: action.title,
+                    status: 0,
+                    description: action.description,
+                    createdAt: action.createdAt
+                }
+            ]
+        case "UPDATE":
+            return state = state.filter(task => task.id != action.id),
+            [
+                    ...state,
+                    {
+                        id: action.id,
+                        title: action.title,
+                        status: action.status,
+                        description: action.description,
+                        createdAt: action.createdAt
+                    }
+                ]
         default:
             return state;
     }
 }
 
-export default rootReducer;
+const Reducers = combineReducers({
+    tasks : rootReducer
+})
+
+export default Reducers;
