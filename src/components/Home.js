@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import "./Home.css";
 import { useSelector, useDispatch } from 'react-redux'
 import { addTask } from './../actions/index'
+import Swal from 'sweetalert2'
 
 class Home extends Component {
     state = {
@@ -30,17 +31,24 @@ class Home extends Component {
             description: this.state.description,
             createdAt: waktu
         };
-        const list = [...this.state.list];
+        const list = this.props.LIST;
         list.push(newTask);
         this.setState({
             list,
-            newTask
+            newTask,
+            title:"",
+            description:""
         });
         this.props.addTask(
             list
         )
-        
-
+        Swal.fire({
+            position: 'center',
+            icon: 'success',
+            title: 'Task berhasil ditambahkan',
+            showConfirmButton: false,
+            timer: 1500
+        })
     };
 
 
@@ -72,14 +80,22 @@ class Home extends Component {
                 createdAt: waktu
             };
         }
-        const list = [...this.state.list];
+        const list = this.props.LIST;
         const data = list.filter(item => item.id !== this.state.isi.id);
         data.push(newTask);
         this.setState({
-            list:data,
+            // list:data,
             title: "",
             description: "",
             show:false
+        });
+        this.props.addTask(data);
+        Swal.fire({
+            position: 'center',
+            icon: 'success',
+            title: 'Task berhasil diupdate',
+            showConfirmButton: false,
+            timer: 1500
         });
     };
 
@@ -155,7 +171,7 @@ class Home extends Component {
     detailTask(id) {
         this.setState({ show: !this.state.show});
 
-        const list = [...this.state.list];
+        const list = this.props.LIST;
         const dataIsi = list.filter(item => item.id === id);
         const Isi = {
                 id: dataIsi[0].id,
@@ -167,12 +183,13 @@ class Home extends Component {
         this.setState({
             isi: Isi
         });
+
         console.log(dataIsi)
     };
     
 
     showTaskDone = () => {
-        let rendTask = this.state.list.map(val => {
+        let rendTask = this.props.LIST.map(val => {
             if (val.status === 1) {
                 return (
                     <tr>
@@ -188,13 +205,38 @@ class Home extends Component {
     };
 
     deleteItem(id) {
-        const list = [...this.state.list];
-        const updatedList = list.filter(item => item.id !== id);
-        this.setState({ list: updatedList });
+        Swal.fire({
+            title: 'Serius mau dihapus?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            // this.setState({ list: updatedList });
+            if (result.value) {
+                const updatedList = this.props.LIST.filter(item => item.id !== id);
+                this.props.addTask(updatedList)
+                Swal.fire(
+                    'Deleted!',
+                    'Your file has been deleted.',
+                    'success'
+                )
+            }
+            else{
+                Swal.close()
+            }
+        })
+        // const list = this.props.LIST;
+        // const updatedList = list.filter(item => item.id !== id);
+        // this.setState({ list: updatedList });
+        // this.props.addTask(updatedList)
+        
     };
 
     cancelTask(id) {
-        const list = [...this.state.list];
+        const list = this.props.LIST;
         const updatedList = list.filter(item => item.id !== id);
         let dataUpdate = list.filter(item => item.id === id);
         let dataPush = {
@@ -205,11 +247,19 @@ class Home extends Component {
             createdAt: dataUpdate[0].createdAt
         };
         let List = [...updatedList, dataPush]
-        this.setState({ list: List });
+        // this.setState({ list: List });
+        this.props.addTask(List)
+         Swal.fire({
+             position: 'center',
+             icon: 'info',
+             title: 'Pindah kolom sebelah ya!',
+             showConfirmButton: false,
+             timer: 1500
+         })
     };
 
     doneTask(id) {
-        const list = [...this.state.list];
+        const list = this.props.LIST;
         const updatedList = list.filter(item => item.id !== id);
         let dataUpdate = list.filter(item => item.id === id);
         let dataPush = {
@@ -220,7 +270,15 @@ class Home extends Component {
             createdAt: dataUpdate[0].createdAt
         };
         let List = [...updatedList, dataPush]
-        this.setState({ list: List });
+        // this.setState({ list: List });
+        this.props.addTask(List)
+         Swal.fire({
+             position: 'center',
+             icon: 'success',
+             title: 'Your work has been Done!',
+             showConfirmButton: false,
+             timer: 1500
+         })
     };
 
     componentDidMount(){
