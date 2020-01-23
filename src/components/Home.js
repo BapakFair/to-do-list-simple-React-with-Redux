@@ -179,7 +179,6 @@ class Home extends Component {
     };
     
     render() {
-        // console.log(this.state.id)
         const { title, description } = this.state;
         const { addNewTask } = this.props;
         return (
